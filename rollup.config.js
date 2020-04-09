@@ -11,38 +11,38 @@ export default [
     output: {
       file: pkg.browser,
       name: "autoComplete",
-      format: "umd"
+      format: "umd",
     },
     plugins: [
       eslint(),
       babel({
         exclude: "node_modules/**",
-        presets: ["@babel/preset-env"]
+        presets: ["@babel/preset-env"],
       }),
-      uglify({
-        compress: {
-          toplevel: true,
-          drop_console: true
-        }
-      }),
-      gzipPlugin()
-    ]
+      // uglify({
+      //   compress: {
+      //     toplevel: true,
+      //     drop_console: true,
+      //   },
+      // }),
+      // gzipPlugin(),
+    ],
   },
   {
     input: "src/models/autoComplete.js",
     output: {
       file: pkg.main,
       name: "autoComplete",
-      format: "umd"
+      format: "umd",
     },
     plugins: [
       eslint(),
       babel({
         exclude: "node_modules/**",
-        presets: ["@babel/preset-env"]
+        presets: ["@babel/preset-env"],
       }),
       cleanup(),
-      gzipPlugin()
-    ]
-  }
+      gzipPlugin(),
+    ],
+  },
 ];

@@ -150,8 +150,14 @@
       }),
       selection: resultsValues.list.find(function (value) {
         if (event.keyCode === keys.ENTER) {
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+          event.preventDefault();
           return value.index === Number(selection.getAttribute(dataAttribute));
         } else if (event.type === "mousedown") {
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+          event.preventDefault();
           return value.index === Number(event.currentTarget.getAttribute(dataAttribute));
         }
       })
@@ -370,53 +376,51 @@
       }
     }, {
       key: "listMatchedResults",
-      value: function listMatchedResults(data) {
+      value: function listMatchedResults(data, event, callback) {
         var _this = this;
-        return new Promise(function (resolve) {
-          var resList = [];
-          data.filter(function (record, index) {
-            var search = function search(key) {
-              var recordValue = key ? record[key] : record;
-              if (recordValue) {
-                var match = typeof _this.searchEngine === "function" ? _this.searchEngine(_this.queryValue, recordValue) : _this.search(_this.queryValue, recordValue);
-                if (match && key) {
-                  resList.push({
-                    key: key,
-                    index: index,
-                    match: match,
-                    value: record
-                  });
-                } else if (match && !key) {
-                  resList.push({
-                    index: index,
-                    match: match,
-                    value: record
-                  });
-                }
+        var resList = [];
+        data.filter(function (record, index) {
+          var search = function search(key) {
+            var recordValue = key ? record[key] : record;
+            if (recordValue) {
+              var match = typeof _this.searchEngine === "function" ? _this.searchEngine(_this.queryValue, recordValue) : _this.search(_this.queryValue, recordValue);
+              if (match && key) {
+                resList.push({
+                  key: key,
+                  index: index,
+                  match: match,
+                  value: record
+                });
+              } else if (match && !key) {
+                resList.push({
+                  index: index,
+                  match: match,
+                  value: record
+                });
               }
-            };
-            if (_this.data.key) {
-              var _iterator = _createForOfIteratorHelper(_this.data.key),
-                  _step;
-              try {
-                for (_iterator.s(); !(_step = _iterator.n()).done;) {
-                  var key = _step.value;
-                  search(key);
-                }
-              } catch (err) {
-                _iterator.e(err);
-              } finally {
-                _iterator.f();
-              }
-            } else {
-              search();
             }
-          });
-          var list = _this.sort ? resList.sort(_this.sort).slice(0, _this.maxResults) : resList.slice(0, _this.maxResults);
-          return resolve({
-            matches: resList.length,
-            list: list
-          });
+          };
+          if (_this.data.key) {
+            var _iterator = _createForOfIteratorHelper(_this.data.key),
+                _step;
+            try {
+              for (_iterator.s(); !(_step = _iterator.n()).done;) {
+                var key = _step.value;
+                search(key);
+              }
+            } catch (err) {
+              _iterator.e(err);
+            } finally {
+              _iterator.f();
+            }
+          } else {
+            search();
+          }
+        });
+        var list = this.sort ? resList.sort(this.sort).slice(0, this.maxResults) : resList.slice(0, this.maxResults);
+        return callback({
+          matches: resList.length,
+          list: list
         });
       }
     }, {
@@ -460,15 +464,16 @@
             var resultsList = _this2.resultsList.view;
             var clearResults$$1 = clearResults(resultsList);
             if (triggerCondition) {
-              _this2.listMatchedResults(_this2.dataStream, event).then(function (list) {
+              var that = _this2;
+              _this2.listMatchedResults(_this2.dataStream, event, function (list) {
                 eventEmitter(event, list);
-                if (_this2.resultsList.render) {
-                  if (list.list.length === 0 && _this2.noResults) {
-                    _this2.noResults();
+                if (that.resultsList.render) {
+                  if (list.list.length === 0 && that.noResults) {
+                    that.noResults();
                   } else {
-                    addResultsToList(resultsList, list.list, _this2.resultItem);
-                    if (_this2.onSelection) {
-                      _this2.resultsList.navigation ? _this2.resultsList.navigation(event, input, resultsList, _this2.onSelection, list) : navigation(input, resultsList, _this2.onSelection, list);
+                    addResultsToList(resultsList, list.list, that.resultItem);
+                    if (that.onSelection) {
+                      that.resultsList.navigation ? that.resultsList.navigation(event, input, resultsList, that.onSelection, list) : navigation(input, resultsList, that.onSelection, list);
                     }
                   }
                 }
@@ -477,16 +482,15 @@
               eventEmitter(event);
             }
           } else if (!renderResultsList && triggerCondition) {
-            _this2.listMatchedResults(_this2.dataStream, event).then(function (list) {
+            _this2.listMatchedResults(_this2.dataStream, event, function (list) {
               eventEmitter(event, list);
             });
           }
         };
         var run = function run(event) {
-          Promise.resolve(_this2.data.cache ? _this2.dataStream : _this2.data.src()).then(function (data) {
-            _this2.dataStream = data;
-            exec(event);
-          });
+          var data = _this2.data.cache ? _this2.dataStream : _this2.data.src();
+          _this2.dataStream = data;
+          exec(event);
         };
         this.trigger.event.forEach(function (eventType) {
           input.addEventListener(eventType, debounce(function (event) {
@@ -497,12 +501,10 @@
     }, {
       key: "init",
       value: function init() {
-        var _this3 = this;
         if (this.data.cache) {
-          Promise.resolve(this.data.src()).then(function (data) {
-            _this3.dataStream = data;
-            _this3.ignite();
-          });
+          var d = this.data.src();
+          this.dataStream = d;
+          this.ignite();
         } else {
           this.ignite();
         }
