@@ -9,6 +9,7 @@
 ![\[Size\]()](https://img.shields.io/badge/Size-7%20KB-green.svg)
 [![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/TarekRaafat/autoComplete.js)
 
+Made the project IE11 compatible for NON-ASYNC data
 <br>
 <br>
 <p align="center">
